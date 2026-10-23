@@ -96,6 +96,42 @@ export function useBoard() {
     setTasks((all) => all.filter((t) => t.id !== id))
   }
 
+  // Админка: пользователи и проекты. После правки имени или проекта перечитываем задачи,
+  // потому что в них лежат имена авторов, исполнителей и названия проектов
+  async function createUser(data) {
+    const created = await run(() => api.createUser(data))
+    setUsers((all) => [...all, created])
+  }
+
+  async function updateUser(id, changes) {
+    const updated = await run(() => api.updateUser(id, changes))
+    setUsers((all) => all.map((u) => (u.id === id ? updated : u)))
+    if (id === user.id) setUser(updated)
+    await run(loadBoard)
+  }
+
+  async function deleteUser(id) {
+    await run(() => api.deleteUser(id))
+    setUsers((all) => all.filter((u) => u.id !== id))
+    await run(loadBoard)
+  }
+
+  async function createProject(data) {
+    const created = await run(() => api.createProject(data))
+    setProjects((all) => [...all, created])
+  }
+
+  async function updateProject(id, changes) {
+    const updated = await run(() => api.updateProject(id, changes))
+    setProjects((all) => all.map((p) => (p.id === id ? updated : p)))
+    await run(loadBoard)
+  }
+
+  async function deleteProject(id) {
+    await run(() => api.deleteProject(id))
+    setProjects((all) => all.filter((p) => p.id !== id))
+  }
+
   // Комментарии грузит окно задачи, а счётчик на карточке обновляем здесь
   function changeCommentCount(taskId, delta) {
     setTasks((all) => all.map((t) => (t.id === taskId ? { ...t, commentCount: t.commentCount + delta } : t)))
@@ -116,5 +152,11 @@ export function useBoard() {
     updateTask,
     deleteTask,
     changeCommentCount,
+    createUser,
+    updateUser,
+    deleteUser,
+    createProject,
+    updateProject,
+    deleteProject,
   }
 }
