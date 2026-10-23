@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { COLUMNS, ROLES } from '../data.js'
 
-// Админка: сводка, пользователи и проекты. Видна только ADMIN.
+// Режим управления: пользователи, проекты и сводка. Виден только ADMIN.
 // Ошибки сервера (например, дубль email) показывает общий баннер доски.
 export function AdminPage({ board }) {
   const { user, users, projects, tasks } = board
@@ -9,19 +9,7 @@ export function AdminPage({ board }) {
   return (
     <div className="admin">
       <section className="admin-section">
-        <h2 className="admin-title">Сводка</h2>
-        <div className="stats">
-          <Stat label="Пользователи" value={users.length} />
-          <Stat label="Проекты" value={projects.length} />
-          <Stat label="Задачи" value={tasks.length} />
-          {COLUMNS.map((c) => (
-            <Stat key={c.id} label={c.title} value={tasks.filter((t) => t.status === c.id).length} dot={c.id} />
-          ))}
-        </div>
-      </section>
-
-      <section className="admin-section">
-        <h2 className="admin-title">Пользователи</h2>
+        <h2 className="admin-title">Пользователи · {users.length}</h2>
         <div className="table-wrap">
           <table className="table">
             <thead>
@@ -146,6 +134,17 @@ export function AdminPage({ board }) {
           </table>
         </div>
         <NewProjectForm onCreate={board.createProject} />
+      </section>
+      <section className="admin-section">
+        <h2 className="admin-title">Сводка</h2>
+        <div className="stats">
+          <Stat label="Пользователи" value={users.length} />
+          <Stat label="Проекты" value={projects.length} />
+          <Stat label="Задачи" value={tasks.length} />
+          {COLUMNS.map((c) => (
+            <Stat key={c.id} label={c.title} value={tasks.filter((t) => t.status === c.id).length} dot={c.id} />
+          ))}
+        </div>
       </section>
     </div>
   )

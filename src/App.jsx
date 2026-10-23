@@ -60,18 +60,15 @@ export default function App() {
       <header className="header">
         <div className="header-left">
           <div>
-            <h1 className="title">Pet Jira</h1>
-            <p className="subtitle">Моковая доска для проверки работы агентов</p>
+            <h1 className="title">{showAdmin ? 'Управление' : 'Pet Jira'}</h1>
+            <p className="subtitle">
+              {showAdmin ? 'Пользователи, роли и проекты' : 'Моковая доска для проверки работы агентов'}
+            </p>
           </div>
-          {can.openAdmin(user) && (
-            <nav className="tabs">
-              <button className={showAdmin ? '' : 'active'} onClick={() => openTab('board')}>
-                Доска
-              </button>
-              <button className={showAdmin ? 'active' : ''} onClick={() => openTab('admin')}>
-                Админка
-              </button>
-            </nav>
+          {showAdmin && (
+            <button className="btn" onClick={() => openTab('board')}>
+              ← К доске
+            </button>
           )}
         </div>
         <div className="header-actions">
@@ -82,6 +79,17 @@ export default function App() {
           <button className="link-btn" onClick={board.logout}>
             Сменить пользователя
           </button>
+          {can.openAdmin(user) && (
+            <button
+              className={`icon-btn ${showAdmin ? 'active' : ''}`}
+              onClick={() => openTab(showAdmin ? 'board' : 'admin')}
+              title={showAdmin ? 'Вернуться к доске' : 'Управление: пользователи и проекты'}
+              aria-label="Управление"
+              aria-pressed={showAdmin}
+            >
+              <GearIcon />
+            </button>
+          )}
           {!showAdmin && can.createTask(user) && (
             <button className="btn btn-primary" onClick={() => setOpenTask('new')}>
               + Новая задача
@@ -160,5 +168,14 @@ export default function App() {
         />
       )}
     </div>
+  )
+}
+
+function GearIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
   )
 }
