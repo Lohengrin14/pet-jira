@@ -48,7 +48,17 @@ export default function App() {
     )
   }
 
-  if (!user) return <LoginScreen users={board.users} onLogin={board.login} error={error} />
+  if (!user) {
+    return (
+      <LoginScreen
+        options={board.authOptions}
+        devUsers={board.devUsers}
+        onLogin={board.login}
+        onGoogle={board.googleLogin}
+        error={error}
+      />
+    )
+  }
 
   const editedTask = tasks.find((t) => t.id === openTask)
   const showAdmin = tab === 'admin' && can.openAdmin(user)
