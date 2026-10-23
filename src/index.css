@@ -55,6 +55,8 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .btn:hover { background: var(--column); }
 .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
 .btn-primary:hover { background: var(--primary-hover); }
+.btn-quiet { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+.btn-quiet:hover { color: var(--text); }
 .btn-danger { color: var(--danger); border-color: transparent; background: transparent; padding-left: 0; }
 .btn-danger:hover { background: transparent; text-decoration: underline; }
 

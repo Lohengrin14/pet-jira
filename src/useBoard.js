@@ -14,10 +14,17 @@ export function useBoard() {
   const [status, setStatus] = useState('loading')
   const [error, setError] = useState(null)
 
+  // Выход: забываем токен и данные, возвращаемся на экран входа
   const logout = useCallback(() => {
     setToken(null)
     setUser(null)
+    setUsers([])
+    setProjects([])
     setTasks([])
+    setError(null)
+    if (window.location.hash) window.location.hash = ''
+    // Чтобы Google не подставил тот же аккаунт автоматически при следующем входе
+    window.google?.accounts?.id?.disableAutoSelect()
   }, [])
 
   // Общая обёртка: показывает ошибку сервера, при протухшем токене выходит
