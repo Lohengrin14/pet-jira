@@ -1,38 +1,52 @@
-import { CURRENT_USER, projectById } from '../data.js'
+import { PRIORITIES, projectColor } from '../data.js'
+import { can } from '../permissions.js'
 
-export function TaskCard({ task, onOpen, onAssign }) {
-  const project = projectById(task.projectId)
-  const isMine = task.assigneeId === CURRENT_USER.id
+export function TaskCard({ task, user, projects, onOpen, onAssign }) {
+  const editable = can.editTask(user, task)
+  const priority = PRIORITIES.find((p) => p.id === task.priority)
 
   return (
     <article
-      className="card"
-      draggable
-      onDragStart={(e) => e.dataTransfer.setData('text/plain', task.id)}
+      className={`card ${editable ? '' : 'card-locked'}`}
+      draggable={editable}
+      onDragStart={(e) => e.dataTransfer.setData('text/plain', String(task.id))}
       onClick={() => onOpen(task.id)}
     >
-      <span className="project-tag" style={{ '--tag': project.color }}>
-        {project.name}
-      </span>
+      <div className="card-head">
+        <span className="project-tag" style={{ '--tag': projectColor(projects, task.project.id) }}>
+          {task.project.name}
+        </span>
+        <span className="card-key">{task.key}</span>
+        {(task.priority === 'HIGH' || task.priority === 'CRITICAL') && (
+          <span className={`priority priority-${task.priority.toLowerCase()}`}>{priority.title}</span>
+        )}
+      </div>
       <h3 className="card-title">{task.title}</h3>
       {task.description && <p className="card-desc">{task.description}</p>}
 
       <div className="card-foot">
-        {isMine ? (
-          <span className="assignee" title={CURRENT_USER.name}>
-            <span className="avatar">{CURRENT_USER.name[0]}</span>
-            {CURRENT_USER.name}
+        {task.assignee ? (
+          <span className="assignee" title={task.assignee.name}>
+            <span className="avatar">{task.assignee.name[0]}</span>
+            {task.assignee.name}
           </span>
-        ) : (
+        ) : editable ? (
           <button
             className="link-btn"
             onClick={(e) => {
               e.stopPropagation()
-              onAssign(task.id, CURRENT_USER.id)
+              onAssign(task.id, user.id)
             }}
           >
             Назначить на себя
           </button>
+        ) : (
+          <span className="muted small">Без исполнителя</span>
+        )}
+        {task.commentCount > 0 && (
+          <span className="comment-count" title="Комментарии">
+            💬 {task.commentCount}
+          </span>
         )}
       </div>
     </article>
