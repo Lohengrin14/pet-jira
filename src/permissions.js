@@ -10,4 +10,6 @@ export const can = {
   deleteTask: (user) => isStaff(user),
   comment: (user) => user.role !== 'VIEWER',
   deleteComment: (user, comment) => isStaff(user) || comment.author.id === user.id,
+  // Вкладка «Админка»
+  openAdmin: (user) => user.role === 'ADMIN',
 }

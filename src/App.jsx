@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { AdminPage } from './components/AdminPage.jsx'
 import { Column } from './components/Column.jsx'
 import { LoginScreen } from './components/LoginScreen.jsx'
 import { TaskModal } from './components/TaskModal.jsx'
@@ -11,6 +12,19 @@ export default function App() {
   const { user, tasks, error } = board
   // null: окно закрыто, 'new': создание задачи, иначе id открытой задачи
   const [openTask, setOpenTask] = useState(null)
+  // Вкладка живёт в адресе (#admin), чтобы переживать перезагрузку и открываться по ссылке
+  const [tab, setTab] = useState(() => (window.location.hash === '#admin' ? 'admin' : 'board'))
+
+  useEffect(() => {
+    const onHash = () => setTab(window.location.hash === '#admin' ? 'admin' : 'board')
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+
+  function openTab(next) {
+    window.location.hash = next === 'admin' ? 'admin' : ''
+    setTab(next)
+  }
 
   if (board.status === 'loading') {
     return (
@@ -37,15 +51,28 @@ export default function App() {
   if (!user) return <LoginScreen users={board.users} onLogin={board.login} error={error} />
 
   const editedTask = tasks.find((t) => t.id === openTask)
+  const showAdmin = tab === 'admin' && can.openAdmin(user)
   // Ошибку уже показал баннер, окно просто остаётся открытым
   const ignore = () => {}
 
   return (
     <div className="app">
       <header className="header">
-        <div>
-          <h1 className="title">Pet Jira</h1>
-          <p className="subtitle">Моковая доска для проверки работы агентов</p>
+        <div className="header-left">
+          <div>
+            <h1 className="title">Pet Jira</h1>
+            <p className="subtitle">Моковая доска для проверки работы агентов</p>
+          </div>
+          {can.openAdmin(user) && (
+            <nav className="tabs">
+              <button className={showAdmin ? '' : 'active'} onClick={() => openTab('board')}>
+                Доска
+              </button>
+              <button className={showAdmin ? 'active' : ''} onClick={() => openTab('admin')}>
+                Админка
+              </button>
+            </nav>
+          )}
         </div>
         <div className="header-actions">
           <span className="assignee" title={ROLES[user.role].hint}>
@@ -55,7 +82,7 @@ export default function App() {
           <button className="link-btn" onClick={board.logout}>
             Сменить пользователя
           </button>
-          {can.createTask(user) && (
+          {!showAdmin && can.createTask(user) && (
             <button className="btn btn-primary" onClick={() => setOpenTask('new')}>
               + Новая задача
             </button>
@@ -72,23 +99,27 @@ export default function App() {
         </div>
       )}
 
-      <main className="board">
-        {COLUMNS.map((column) => (
-          <Column
-            key={column.id}
-            column={column}
-            tasks={tasks.filter((t) => t.status === column.id)}
-            user={user}
-            projects={board.projects}
-            onOpen={setOpenTask}
-            onMove={(id) => {
-              const task = tasks.find((t) => t.id === id)
-              if (task && task.status !== column.id) board.updateTask(id, { status: column.id }).catch(ignore)
-            }}
-            onAssign={(id, assigneeId) => board.updateTask(id, { assigneeId }).catch(ignore)}
-          />
-        ))}
-      </main>
+      {showAdmin ? (
+        <AdminPage board={board} />
+      ) : (
+        <main className="board">
+          {COLUMNS.map((column) => (
+            <Column
+              key={column.id}
+              column={column}
+              tasks={tasks.filter((t) => t.status === column.id)}
+              user={user}
+              projects={board.projects}
+              onOpen={setOpenTask}
+              onMove={(id) => {
+                const task = tasks.find((t) => t.id === id)
+                if (task && task.status !== column.id) board.updateTask(id, { status: column.id }).catch(ignore)
+              }}
+              onAssign={(id, assigneeId) => board.updateTask(id, { assigneeId }).catch(ignore)}
+            />
+          ))}
+        </main>
+      )}
 
       {openTask === 'new' && (
         <TaskModal
