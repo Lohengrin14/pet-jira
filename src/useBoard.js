@@ -4,6 +4,9 @@ import { api, ApiError, getToken, setToken } from './api.js'
 // Состояние доски: кто вошёл, пользователи, проекты, задачи. Всё приходит с сервера.
 export function useBoard() {
   const [user, setUser] = useState(null)
+  // Способы входа с сервера: { googleClientId, devLogin } и тестовые пользователи для входа без пароля
+  const [authOptions, setAuthOptions] = useState({ googleClientId: null, devLogin: false })
+  const [devUsers, setDevUsers] = useState([])
   const [users, setUsers] = useState([])
   const [projects, setProjects] = useState([])
   const [tasks, setTasks] = useState([])
@@ -32,25 +35,28 @@ export function useBoard() {
     [logout],
   )
 
-  // Проекты и задачи грузим сразу после входа
+  // Пользователи, проекты и задачи грузим сразу после входа
   const loadBoard = useCallback(async () => {
-    const [projectList, taskList] = await Promise.all([api.projects(), api.tasks()])
+    const [userList, projectList, taskList] = await Promise.all([api.users(), api.projects(), api.tasks()])
+    setUsers(userList)
     setProjects(projectList)
     setTasks(taskList)
   }, [])
 
-  // Первый запуск: список пользователей для входа и, если есть токен, текущий пользователь
+  // Первый запуск: способы входа и, если есть токен, текущий пользователь
   useEffect(() => {
     let cancelled = false
     async function start() {
       try {
-        const list = await api.users()
+        const options = await api.authOptions()
+        const testUsers = options.devLogin ? await api.devUsers() : []
         const me = getToken() ? await api.me().catch(() => null) : null
         if (cancelled) return
         if (!me) setToken(null)
         else await loadBoard()
         if (cancelled) return
-        setUsers(list)
+        setAuthOptions(options)
+        setDevUsers(testUsers)
         setUser(me)
         setStatus('ready')
       } catch (e) {
@@ -67,7 +73,14 @@ export function useBoard() {
   }, [loadBoard])
 
   async function login(userId) {
-    const { token, user: me } = await run(() => api.login(userId))
+    await finishLogin(await run(() => api.login(userId)))
+  }
+
+  async function googleLogin(credential) {
+    await finishLogin(await run(() => api.googleLogin(credential)))
+  }
+
+  async function finishLogin({ token, user: me }) {
     setToken(token)
     await run(loadBoard)
     setUser(me)
@@ -139,6 +152,8 @@ export function useBoard() {
 
   return {
     user,
+    authOptions,
+    devUsers,
     users,
     projects,
     tasks,
@@ -147,6 +162,7 @@ export function useBoard() {
     clearError: () => setError(null),
     run,
     login,
+    googleLogin,
     logout,
     createTask,
     updateTask,

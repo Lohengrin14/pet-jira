@@ -47,8 +47,11 @@ async function request(method, path, body) {
 
 export const api = {
   health: () => request('GET', '/health'),
-  users: () => request('GET', '/users'),
+  authOptions: () => request('GET', '/auth/options'),
+  devUsers: () => request('GET', '/auth/dev-users'),
   login: (userId) => request('POST', '/auth/dev-login', { userId }),
+  googleLogin: (credential) => request('POST', '/auth/google', { credential }),
+  users: () => request('GET', '/users'),
   me: () => request('GET', '/me'),
   createUser: (data) => request('POST', '/users', data),
   updateUser: (id, changes) => request('PATCH', `/users/${id}`, changes),
